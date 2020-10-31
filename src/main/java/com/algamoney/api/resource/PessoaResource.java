@@ -5,6 +5,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.algamoney.api.event.RecursoCriadoEvent;
 import com.algamoney.api.model.Pessoa;
 import com.algamoney.api.repository.PessoaRepository;
+import com.algamoney.api.service.PessoaService;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,9 @@ public class PessoaResource {
 
     @Autowired
     private PessoaRepository pessoaRepository;
+
+    @Autowired
+    private PessoaService PessoaService;
 
     @Autowired
     private ApplicationEventPublisher publisher;
@@ -57,12 +61,7 @@ public class PessoaResource {
 
     @PutMapping("/{codigo}")
     public ResponseEntity<Pessoa> atualizar(@PathVariable Long codigo, @Validated @RequestBody Pessoa pessoa) {
-        Pessoa pessoaSalva = pessoaRepository.getOne(codigo);
-        if(pessoaSalva == null) {
-            throw new EmptyResultDataAccessException(1);
-        }
-        BeanUtils.copyProperties(pessoa, pessoaSalva, "codigo");
-        pessoaRepository.save(pessoaSalva);
+        Pessoa pessoaSalva = PessoaService.atualizar(codigo, pessoa);
         return ResponseEntity.ok(pessoaSalva);
 
     }
