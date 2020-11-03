@@ -7,10 +7,8 @@ import com.algamoney.api.model.Pessoa;
 import com.algamoney.api.repository.PessoaRepository;
 import com.algamoney.api.service.PessoaService;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
