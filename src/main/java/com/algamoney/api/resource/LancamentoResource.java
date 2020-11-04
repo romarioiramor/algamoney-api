@@ -1,20 +1,26 @@
 package com.algamoney.api.resource;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
 import com.algamoney.api.event.RecursoCriadoEvent;
+import com.algamoney.api.exceptionhandler.AlgamoneyExceptionHandler.Erro;
 import com.algamoney.api.model.Lancamento;
 import com.algamoney.api.repository.LancamentoRepository;
 import com.algamoney.api.service.LancamentoService;
+import com.algamoney.api.service.exception.PessoaInexistenteOuInativaException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,12 +37,16 @@ public class LancamentoResource {
     @Autowired
     private LancamentoRepository lancamentoRepository;
 
+    private LancamentoService LancamentoService;
+
     @Autowired
     private ApplicationEventPublisher publisher;
 
+    private MessageSource messageSource;
+
     @PostMapping
     public ResponseEntity<Lancamento> criar(@Validated @RequestBody Lancamento lancamento, HttpServletResponse response) {
-        Lancamento lancamentoSalvo = lancamentoRepository.save(lancamento);
+        Lancamento lancamentoSalvo = LancamentoService.salvar(lancamento);
         publisher.publishEvent(new RecursoCriadoEvent(this, response, lancamentoSalvo.getCodigo()));
         return ResponseEntity.status(HttpStatus.CREATED).body(lancamentoSalvo);
 
@@ -59,12 +69,20 @@ public class LancamentoResource {
         lancamentoRepository.deleteById(codigo);
     }
 
-   /* @PutMapping("/{codigo}")
+   @PutMapping("/{codigo}")
     public ResponseEntity<Lancamento> atualizar(@PathVariable Long codigo, @Validated @RequestBody Lancamento lancamento) {
         Lancamento lancamentoSalvo = LancamentoService.atualizar(codigo, lancamento);
         return ResponseEntity.ok(lancamentoSalvo);
 
-    }*/
+    }
+
+    @ExceptionHandler({PessoaInexistenteOuInativaException.class})
+    public ResponseEntity<Object> handlePessoaInexistenteOuInativaException(PessoaInexistenteOuInativaException ex) {
+        String mensagemUsuario = messageSource.getMessage("pessoa.inexistente-ou-inativa", null, LocaleContextHolder.getLocale());
+        String mensagemDesenvolvedor = ex.toString();
+        List<Erro> erros = Arrays.asList(new Erro(mensagemUsuario, mensagemDesenvolvedor));
+        return ResponseEntity.badRequest().body(erros);
+    }
 
  
 }
